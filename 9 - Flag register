@@ -2,44 +2,125 @@
 .STACK 100H
 
 .DATA
-MSG DB 'FLAGS = $'
+msg db 0Dh,0Ah,"Flag Register Status:",0Dh,0Ah,"$"
+
+cf_msg db "CF = $"
+pf_msg db 0Dh,0Ah,"PF = $"
+af_msg db 0Dh,0Ah,"AF = $"
+zf_msg db 0Dh,0Ah,"ZF = $"
+sf_msg db 0Dh,0Ah,"SF = $"
+tf_msg db 0Dh,0Ah,"TF = $"
+if_msg db 0Dh,0Ah,"IF = $"
+df_msg db 0Dh,0Ah,"DF = $"
+of_msg db 0Dh,0Ah,"OF = $"
 
 .CODE
 MAIN PROC
     MOV AX, @DATA
     MOV DS, AX
 
-    ; Print message
-    MOV DX, OFFSET MSG
+    ; Print heading
+    LEA DX, msg
     MOV AH, 09H
     INT 21H
 
-    ; Get FLAGS into AX
+    ; Push flags into stack
     PUSHF
     POP AX
 
-    MOV CX, 16        ; 16 bits to display
-
-PRINT_BITS:
-    ROL AX, 1         ; rotate left, MSB → CF
-    JC PRINT_1
-
-PRINT_0:
-    MOV DL, '0'
-    JMP DISPLAY
-
-PRINT_1:
-    MOV DL, '1'
-
-DISPLAY:
-    MOV AH, 02H
+    ; ---- CF ----
+    LEA DX, cf_msg
+    MOV AH, 09H
     INT 21H
+    MOV BX, AX
+    AND BX, 0001H
+    CALL PRINT_BIT
 
-    LOOP PRINT_BITS
+    ; ---- PF ----
+    LEA DX, pf_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 2
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- AF ----
+    LEA DX, af_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 4
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- ZF ----
+    LEA DX, zf_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 6
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- SF ----
+    LEA DX, sf_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 7
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- TF ----
+    LEA DX, tf_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 8
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- IF ----
+    LEA DX, if_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 9
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- DF ----
+    LEA DX, df_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 10
+    AND BX, 1
+    CALL PRINT_BIT
+
+    ; ---- OF ----
+    LEA DX, of_msg
+    MOV AH, 09H
+    INT 21H
+    MOV BX, AX
+    SHR BX, 11
+    AND BX, 1
+    CALL PRINT_BIT
 
     ; Exit
     MOV AH, 4CH
     INT 21H
 
 MAIN ENDP
+
+; ---- Procedure to print 0 or 1 ----
+PRINT_BIT PROC
+    ADD BL, '0'
+    MOV DL, BL
+    MOV AH, 02H
+    INT 21H
+    RET
+PRINT_BIT ENDP
+
 END MAIN
